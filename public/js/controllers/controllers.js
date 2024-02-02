@@ -126,7 +126,7 @@ var MainCtrl = [
         $scope.checkUpVersion = function () {
             Request.get('/api/version', function (res) {
                 $scope.version = res.data;
-                $scope.checkNewVersion();
+                //$scope.checkNewVersion();
             });
         }
 
@@ -307,7 +307,7 @@ var SettingCtrl = [
         $scope.load = function () {
             Request.get('/api/version', function (res) {
                 $scope.version = res.data;
-                $scope.checkUpVersion();
+                //$scope.checkUpVersion();
             });
         }
 
