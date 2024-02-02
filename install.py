@@ -57,7 +57,7 @@ class Install(object):
             self.arch = 'i386'
         self.initd_script = '/etc/init.d/inpanel'
         self.installpath = '/usr/local/inpanel'
-        self.listen_port = 8888
+        self.listen_port = 18888
         self.username = 'admin'
         self.password = 'admin'
         self.repository = 'https://github.com/inpanel/inpanel.git'
@@ -233,6 +233,38 @@ class Install(object):
         self._run('cp %s %s' % (initscript, self.initd_script))
         self._run('chmod +x %s' % self.initd_script)
 
+    def handle_inpanel_local(self):
+        # handle InPanel
+        print('* Installing InPanel')
+
+        # stop service
+        if os.path.exists(self.initd_script):
+            self._run('%s stop' % self.initd_script)
+
+        # backup data and remove old code
+        # if os.path.exists('%s/data/' % self.installpath):
+        #     self._run('mkdir /tmp/inpanel_data', True)
+        #     self._run('/bin/cp -rf %s/data/* /tmp/inpanel_data/' % self.installpath, True)
+
+        if self.installpath:
+            self._run('rm -rf %s' % self.installpath)
+        print('')
+        print('Install path : %s' % self.installpath)
+        print('')
+        self._run('mkdir -p %s' % self.installpath)
+        for file in os.listdir(sys.path[0]):
+            #print('%s' % file)
+            self._run('/bin/cp -rf %s/%s %s/' % (sys.path[0], file, self.installpath))
+
+        # install new code
+        # self._run('mv inpanel %s' % self.installpath)
+        self._run('chmod +x %s/config.py %s/server.py' % (self.installpath, self.installpath))
+
+        # install service
+        initscript = '%s/scripts/%s/inpanel' % (self.installpath, self.distname)
+        self._run('cp %s %s' % (initscript, self.initd_script))
+        self._run('chmod +x %s' % self.initd_script)
+
     def handle_intranet(self):
         '''handle the old version Intranet Panel'''
         if os.path.exists('/etc/init.d/intranet'):
@@ -274,14 +306,14 @@ class Install(object):
         print('* Username and password set successfully!')
 
     def detect_ip(self):
-        ip = request.urlopen('http://ip.42.pl/raw').readline()
+        ip = '0.0.0.0' #request.urlopen('http://ip.42.pl/raw').readline()
         return ip
 
     def config_port(self):
         # config listen port
         # port = self.find_free_port()
-        if self.listen_port == 8888 or not self.listen_port.isdigit() or int(self.listen_port) < 5000:
-            port = self.input('InPanel Port [default: 8888, minimum: 5000]: ').strip()
+        if self.listen_port == 18888 or not self.listen_port.isdigit() or int(self.listen_port) < 5000:
+            port = self.input('InPanel Port [default: 18888, minimum: 5000]: ').strip()
             if port and port.isdigit() and int(port) >= 5000:
                 self.listen_port = int(port)
         self._run('%s/config.py port "%s"' % (self.installpath, self.listen_port))
@@ -362,9 +394,9 @@ class Install(object):
 
         self.handle_dependent()
         self.handle_python()
-        self.handle_git()
+        #self.handle_git()
         self.handle_intranet()
-        self.handle_inpanel()
+        self.handle_inpanel_local()
         self.handle_vpsmate()
         self.config_account()
         self.config_port()

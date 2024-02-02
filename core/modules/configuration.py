@@ -23,7 +23,7 @@ def configurations(inifile=None, configs=None):
     default_configs = {
         'server': {
             'ip': '*',
-            'port': '8888',
+            'port': '18888',
             'forcehttps': 'off',  # force use https
             'lastcheckupdate': 0,
             'updateinfo': '',

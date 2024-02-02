@@ -768,7 +768,7 @@ class SettingHandler(RequestHandler):
                     self.write({'code': -1, 'msg': msg})
                     return
 
-            port = self.get_argument('port', '8888')
+            port = self.get_argument('port', '18888')
             port = int(port)
             if not port > 0 and port < 65535:
                 self.write({'code': -1, 'msg': u'端口范围必须在 0 到 65535 之间！'})
@@ -2644,7 +2644,7 @@ class BackendHandler(RequestHandler):
             if jobname == 'inpanel_install':
                 accessnet = self.get_argument('accessnet', 'public')
                 accesskey = utils.gen_accesskey()
-                accessport = '8888'
+                accessport = '18888'
             elif jobname == 'inpanel_config':
                 if not self.config.has_option('inpanel', instance_name):
                     self.write({'code': -1, 'msg': u'该服务器还未配置远程控制！'})
@@ -4442,7 +4442,7 @@ class ECSHandler(RequestHandler):
                 return
 
             if not self.config.has_option('inpanel', instance_name):
-                accessinfo = {'accesskey': '', 'accessnet': 'public', 'accessport': '8888'}
+                accessinfo = {'accesskey': '', 'accessnet': 'public', 'accessport': '18888'}
             else:
                 data = self.config.get('inpanel', instance_name)
                 data = data.split('|')
