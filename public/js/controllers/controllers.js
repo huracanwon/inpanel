@@ -322,8 +322,8 @@ var SettingCtrl = [
                 $scope.forcehttps = res.forcehttps;
                 $scope.ip = res.ip;
                 $scope.port = res.port;
-                $scope.sslkey = res.sslkey;
-                $scope.sslcrt = res.sslcrt;
+                //$scope.sslkey = res.sslkey;
+                //$scope.sslcrt = res.sslcrt;
             });
         }
         $scope.loadRuntimeInfo = function () {
