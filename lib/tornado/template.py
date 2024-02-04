@@ -186,7 +186,8 @@ from tornado import escape
 from tornado.util import ObjectDict, bytes_type
 
 try:
-    from io import StringIO  # python 3
+    #from io import StringIO  # python 3
+    from io import BytesIO as StringIO
 except ImportError:
     from cStringIO import StringIO  # python 2
 

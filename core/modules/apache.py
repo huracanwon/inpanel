@@ -19,7 +19,8 @@ from string import punctuation
 from core.utils import is_valid_domain, is_valid_ipv4, is_valid_ipv6
 
 try:
-    from io import StringIO
+    #from io import StringIO
+    from io import BytesIO as StringIO
 except:
     from cStringIO import StringIO
 

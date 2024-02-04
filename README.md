@@ -17,6 +17,10 @@ InPanel is an open source Linux server management tool, the goal of this project
 7. Quickly create and install multiple sites
 8. Useful System Tools
 
+## Requirements
+#pip install gevent paramiko websocket wssh
+#pip install paramiko tornado webssh
+
 ## Installation
 
 ```bash

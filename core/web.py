@@ -45,6 +45,8 @@ from modules.service import Service
 from tornado.escape import to_unicode as _d
 from tornado.escape import utf8 as _u
 
+from tornado.httpclient import HTTPRequest
+
 try:
     from shlex import quote  # For Python 3
     from urllib.request import urlopen, Request  # Python 3
@@ -52,6 +54,10 @@ except ImportError:
     from urllib2 import urlopen, Request  # Python 2
     from pipes import quote  # For Python 2
 
+try:
+    from tornado.curl_httpclient import CurlAsyncHTTPClient as AsyncHTTPClient
+except ImportError:
+    from tornado.simple_httpclient import SimpleAsyncHTTPClient as AsyncHTTPClient
 
 class Application(tornado.web.Application):
     def __init__(self, handlers=None, default_host="", transforms=None,
@@ -465,8 +471,41 @@ class QueryHandler(RequestHandler):
     /query/server.datetime,server.diskinfo
     /query/config.fstab(sda1)
     """
+    def _on_proxy(self, response):
+        if response.error:
+            loginfo("proxy failed , error: %s" % response.error)
+            raise tornado.httpclient.HTTPError(500)
+        else:
+            self.write(response.body)
+
+        self.finish()
+        return
+
     def get(self, items):
         self.authed()
+
+        if self.get_argument('proxy','0') == '1':
+            '''
+            # send proxy request
+            try:                
+                AsyncHTTPClient().fetch(
+                    HTTPRequest(url= 'http://127.0.0.1:28888/api/query/**',
+                                headers={'X-ACCESS-TOKEN': 'ZkFpU25rWUFHWVFxSkxpeUhlb1VWU1lPbHp3bkpzblc='},
+                                follow_redirects=False),
+                    self._on_proxy)
+            except tornado.httpclient.HTTPError as httperror:
+                if hasattr(httperror, "response") and httperror.response:
+                    self._on_proxy(httperror.response)
+                else:
+                    loginfo("Tornado signalled HTTPError %s", httperror)
+                    
+            return
+            '''
+            client = tornado.httpclient.HTTPClient()
+            response = client.fetch(HTTPRequest(url= 'http://127.0.0.1:28888/api/query/**',
+                                                headers={'X-ACCESS-TOKEN': 'ZkFpU25rWUFHWVFxSkxpeUhlb1VWU1lPbHp3bkpzblc='}))
+            self.write(response.body)
+            return
 
         items = items.split(',')
         qdict = {'server': [], 'service': [], 'config': [], 'tool': []}

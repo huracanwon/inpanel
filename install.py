@@ -400,7 +400,7 @@ class Install(object):
         self.handle_vpsmate()
         self.config_account()
         self.config_port()
-        self.config_firewall()
+        #self.config_firewall()
         self.start_service()
         print('')
         print('============================')
@@ -414,7 +414,7 @@ class Install(object):
         print('')
         print('Username is: %s' % self.username)
         print('Password is: %s' % self.password)
-        print('\033[5;32mWish you a happy life !\033[0m')
+        print('Wish you a happy life !')
         print('')
         print('')
 

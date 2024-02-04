@@ -29,7 +29,8 @@ from tornado.escape import utf8
 from tornado.httpclient import (AsyncHTTPClient, HTTPError, HTTPRequest, HTTPResponse, main)
 
 try:
-    from io import StringIO  # python 3
+    #from io import StringIO  # python 3
+    from io import BytesIO as StringIO
 except ImportError:
     from cStringIO import StringIO  # python 2
 
