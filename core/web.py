@@ -11,6 +11,7 @@
 
 import binascii
 import hmac
+import logging
 import re
 import time
 from base64 import b64decode, b64encode
@@ -45,8 +46,6 @@ from modules.service import Service
 from tornado.escape import to_unicode as _d
 from tornado.escape import utf8 as _u
 
-from tornado.httpclient import HTTPRequest
-
 try:
     from shlex import quote  # For Python 3
     from urllib.request import urlopen, Request  # Python 3
@@ -54,10 +53,6 @@ except ImportError:
     from urllib2 import urlopen, Request  # Python 2
     from pipes import quote  # For Python 2
 
-try:
-    from tornado.curl_httpclient import CurlAsyncHTTPClient as AsyncHTTPClient
-except ImportError:
-    from tornado.simple_httpclient import SimpleAsyncHTTPClient as AsyncHTTPClient
 
 class Application(tornado.web.Application):
     def __init__(self, handlers=None, default_host="", transforms=None,
@@ -78,10 +73,24 @@ class Application(tornado.web.Application):
 
 
 class RequestHandler(tornado.web.RequestHandler):
+    def prepare(self):
+        #do agent proxy here
+        if self.enable_proxy and self.request.headers.get('Real-Agent', '127.0.0.1') != '127.0.0.1':
+            logging.error("http://%s:28888%s" % (self.request.headers.get('Real-Agent', '127.0.0.1'), self.request.uri))
+            client = tornado.httpclient.HTTPClient()
+            response = client.fetch(tornado.httpclient.HTTPRequest(
+                url = "http://%s:28888%s" % (self.request.headers.get('Real-Agent', '127.0.0.1'), self.request.uri),
+                method=self.request.method,
+                body= self.request.body if self.request.method in ("POST", "PATCH", "PUT") else None,
+                headers={'X-ACCESS-TOKEN': 'ZkFpU25rWUFHWVFxSkxpeUhlb1VWU1lPbHp3bkpzblc='},
+                follow_redirects=False))
+            self.write(response.body)
+            self.finish()
 
     def initialize(self):
         """Parse JSON data to argument list.
         """
+        self.enable_proxy = False
         self.inifile = joinpath(self.settings['conf_path'])
         self.config = configurations(self.inifile)
 
@@ -471,41 +480,13 @@ class QueryHandler(RequestHandler):
     /query/server.datetime,server.diskinfo
     /query/config.fstab(sda1)
     """
-    def _on_proxy(self, response):
-        if response.error:
-            loginfo("proxy failed , error: %s" % response.error)
-            raise tornado.httpclient.HTTPError(500)
-        else:
-            self.write(response.body)
 
-        self.finish()
-        return
+    def initialize(self):
+        super(QueryHandler,self).initialize()
+        self.enable_proxy = True
 
     def get(self, items):
         self.authed()
-
-        if self.get_argument('proxy','0') == '1':
-            '''
-            # send proxy request
-            try:                
-                AsyncHTTPClient().fetch(
-                    HTTPRequest(url= 'http://127.0.0.1:28888/api/query/**',
-                                headers={'X-ACCESS-TOKEN': 'ZkFpU25rWUFHWVFxSkxpeUhlb1VWU1lPbHp3bkpzblc='},
-                                follow_redirects=False),
-                    self._on_proxy)
-            except tornado.httpclient.HTTPError as httperror:
-                if hasattr(httperror, "response") and httperror.response:
-                    self._on_proxy(httperror.response)
-                else:
-                    loginfo("Tornado signalled HTTPError %s", httperror)
-                    
-            return
-            '''
-            client = tornado.httpclient.HTTPClient()
-            response = client.fetch(HTTPRequest(url= 'http://127.0.0.1:28888/api/query/**',
-                                                headers={'X-ACCESS-TOKEN': 'ZkFpU25rWUFHWVFxSkxpeUhlb1VWU1lPbHp3bkpzblc='}))
-            self.write(response.body)
-            return
 
         items = items.split(',')
         qdict = {'server': [], 'service': [], 'config': [], 'tool': []}
@@ -592,6 +573,11 @@ class QueryHandler(RequestHandler):
 class UtilsNetworkHandler(RequestHandler):
     """Handler for network ifconfig.
     """
+
+    def initialize(self):
+        super(UtilsNetworkHandler,self).initialize()
+        self.enable_proxy = True
+
     def get(self, sec, ifname):
         self.authed()
         if sec == 'hostname':
@@ -876,6 +862,9 @@ class SettingHandler(RequestHandler):
 class OperationHandler(RequestHandler):
     ''''Server operation handler
     '''
+    def initialize(self):
+        super(OperationHandler,self).initialize()
+        self.enable_proxy = True
 
     def post(self, op):
         """Run a server operation

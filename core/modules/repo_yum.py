@@ -24,6 +24,10 @@ config_path = '/etc/yum.repos.d'
 class RepoYumHander(RequestHandler):
     """Handler for YUM Request.
     """
+    def initialize(self):
+        super(RepoYumHander,self).initialize()
+        self.enable_proxy = True
+
     def get(self, sec, repo=None):
         self.authed()
         if self.config.get('runtime', 'mode') == 'demo':

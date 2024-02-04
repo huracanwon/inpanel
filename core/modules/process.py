@@ -24,6 +24,10 @@ os_type = system()
 
 class WebRequestProcess(RequestHandler):
     '''Handler for load process list.'''
+
+    def initialize(self):
+        super(WebRequestProcess,self).initialize()
+        self.enable_proxy = True
     def get(self, sec, pid=None):
         self.authed()
         if sec == 'list':
